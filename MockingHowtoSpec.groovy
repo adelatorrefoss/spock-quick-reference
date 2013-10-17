@@ -1,4 +1,4 @@
-class PublisherSpec extends Specification {
+class MockingHowtoSpec extends Specification {
     Publisher publisher = new Publisher()
     Subscriber subscriber = Mock()
     // o
