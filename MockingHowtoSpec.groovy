@@ -1,15 +1,48 @@
+
+// imports for unit testing
+import spock.lang.*
+import grails.plugin.spock.*
+import grails.test.mixin.*
+import grails.buildtestdata.mixin.Build
+import spock.util.mop.ConfineMetaClassChanges
+
+// example for metaclass in setup
+import com.project.User
+
+@Build([User, City])
+@Mock([User, UserRelation])
+@ConfineMetaClassChanges([User]) 
 class MockingHowtoSpec extends Specification {
+
     Publisher publisher = new Publisher()
     Subscriber subscriber = Mock()
     // o
     def subscriber = Mock(Subscriber)
-
+    
+    // o declare and specific interaction at the same time
+    Subscriber subscriber = Mock {
+        1 * receive("hello")
+        1 * receive("goodbye")
+    }
 
     def setup() {
         publisher.subscribers << subscriber // << is a Groovy shorthand for List.add()
         publisher.subscribers << subscriber2
 
         service.otherService = subscriber
+    }
+    
+    
+    
+    // setup for metaclass User
+    def setup() {
+        //mock encodePassword
+        User.metaClass.encodePassword = { return 'aa'}
+        User.metaClass.generateSlug = { return 'aa'}
+        
+        User.build() // works with annotation
+        
+        
     }
 
 
