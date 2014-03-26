@@ -11,14 +11,14 @@ import com.project.User
 
 @Build([User, City])
 @Mock([User, UserRelation])
-@ConfineMetaClassChanges([User]) 
+@ConfineMetaClassChanges([User])
 class MockingHowtoSpec extends Specification {
 
     Publisher publisher = new Publisher()
     Subscriber subscriber = Mock()
     // o
     def subscriber = Mock(Subscriber)
-    
+
     // o declare and specific interaction at the same time
     Subscriber subscriber = Mock {
         1 * receive("hello")
@@ -31,18 +31,18 @@ class MockingHowtoSpec extends Specification {
 
         service.otherService = subscriber
     }
-    
-    
-    
+
+
+
     // setup for metaclass User
     def setup() {
         //mock encodePassword
         User.metaClass.encodePassword = { return 'aa'}
         User.metaClass.generateSlug = { return 'aa'}
-        
+
         User.build() // works with annotation
-        
-        
+
+
     }
 
 
