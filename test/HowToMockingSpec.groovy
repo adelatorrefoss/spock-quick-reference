@@ -248,8 +248,26 @@ class MockingHowtoSpec extends Specification {
     }
     
     
-    
 
+
+
+    // Mocks from Grails
+    // 
+    // The Mock annotation creates mock version of any collaborators. 
+    // There is an in-memory implementation of GORM that will simulate most interactions 
+    // with the GORM API. For those interactions that are not automatically mocked you can 
+    // use the built in support for defining mocks and stubs programmatically. 
+    //
+    // For example:
+
+    void testSearch() {
+          def control = mockFor(SearchService)
+          control.demand.searchWeb { String q -> ['mock results'] }
+          control.demand.static.logResults { List results ->  }
+          controller.searchService = control.createMock()
+          controller.search()
+          assert controller.response.text.contains "Found 1 results"
+    }
 
 }
 
