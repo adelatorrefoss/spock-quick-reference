@@ -268,6 +268,31 @@ class MockingHowtoSpec extends Specification {
           controller.search()
           assert controller.response.text.contains "Found 1 results"
     }
+    
+    
+    // from : http://grails.org/doc/2.4.3/guide/testing.html#unitTesting
+    
+    
+    import grails.test.mixin.TestFor
+import spock.lang.Specification
+@TestFor(BookController)
+@Mock(Book)
+class BookControllerSpec extends Specification {
+
+    void "test search"() {
+        given:
+        def searchMock = mockFor(SearchService)
+        searchMock.demand.searchWeb { String q -> ['first result', 'second result'] }
+        searchMock.demand.static.logResults { List results ->  }
+        controller.searchService = searchMock.createMock()
+
+        when:
+        controller.search()
+
+        then:
+        controller.response.text.contains "Found 2 results"
+    }
+}
 
 }
 
