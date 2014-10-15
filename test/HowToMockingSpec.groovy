@@ -137,15 +137,6 @@ class MockingHowtoSpec extends Specification {
 
     }
 
-    def tests3() {
-        when:
-            publisher.send("hello")
-
-        then:
-            // Mocking and stubbing of the same method call has to happen in the same interaction.
-            1 * subscriber.receive("message1") >> "ok"
-            1 * subscriber.receive("message2") >> "fail"
-    }
 
 
     def onlyStub() {
@@ -164,6 +155,21 @@ class MockingHowtoSpec extends Specification {
 
 
     }
+    
+    
+    // then create like a Mock
+    def tests3() {
+        when:
+            //
+            def subscriber = Mock(Subscriber)
+            publisher.subscribers << subscriber
+            publisher.send("hello")
+
+        then:
+            // Mocking and stubbing of the same method call has to happen in the same interaction.
+            1 * subscriber.receive("message1") >> "ok"
+            1 * subscriber.receive("message2") >> "fail"
+    }    
 
 
     // Advanced match of parameter
