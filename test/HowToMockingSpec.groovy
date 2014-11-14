@@ -30,6 +30,13 @@ class MockingHowtoSpec extends Specification {
         publisher.subscribers << subscriber2
 
         service.otherService = subscriber
+
+
+        // or
+
+        Publisher publisher = new Publisher()
+        def subscriber = Mock(Subscriber)
+        publisher.subscriber = subscriber
     }
 
 
@@ -109,7 +116,10 @@ class MockingHowtoSpec extends Specification {
 
     }
 
-    def tests3() {
+
+    // Mocking and Stubbing
+
+    def test3() {
         when:
             publisher.send("hello")
 
