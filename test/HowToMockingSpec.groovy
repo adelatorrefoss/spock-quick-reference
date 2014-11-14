@@ -76,15 +76,23 @@ class MockingHowtoSpec extends Specification {
             1 * subscriber.setStatus("ok") // NOT: 1 * subscriber.status = "ok"
 
 
-            1 * subscriber.receive("hello")     // an argument that is equal to the String "hello"
-            1 * subscriber.receive(!"hello")    // an argument that is unequal to the String "hello"
             1 * subscriber.receive()            // the empty argument list (would never match in our example)
             1 * subscriber.receive(_)           // any single argument (including null)
             1 * subscriber.receive(*_)          // any argument list (including the empty argument list)
-            1 * subscriber.receive(!null)       // any non-null argument
+
+            // type
             1 * subscriber.receive(_ as String) // any non-null argument that is-a String
+
+            // conditionals
+            1 * subscriber.receive("hello")     // an argument that is equal to the String "hello"
+            1 * subscriber.receive(!"hello")    // an argument that is unequal to the String "hello"
+            1 * subscriber.receive(!null)       // any non-null argument
             1 * subscriber.receive({ it.size() > 3 }) // an argument that satisfies the given predicate
                                                       // (here: message length is greater than 3)
+                                                      
+            // detailed check of parameter passed to function
+            1 * userService.save({User user -> user.name == 'Lucas'})
+    
 
             1 * subscriber._(*_)     // any method on subscriber, with any argument list
             1 * subscriber._         // shortcut for and preferred over the above
@@ -100,6 +108,26 @@ class MockingHowtoSpec extends Specification {
 
 
     }
+
+
+
+    def "Order of execution"() {
+        given:
+            UserService service = Mock()
+            Transaction transaction = Mock()
+        when:
+            service.save(new User())
+            transaction.commit()
+            
+        then:
+            1 * service.save(_ as User)
+        then:
+            1 * transaction.commit()
+    }
+
+
+
+
 
 
     // Stubs
@@ -146,8 +174,150 @@ class MockingHowtoSpec extends Specification {
 
 
     }
+    
+    
+    // then create like a Mock
+    def tests3() {
+        when:
+            //
+            def subscriber = Mock(Subscriber)
+            publisher.subscribers << subscriber
+            publisher.send("hello")
+
+        then:
+            // Mocking and stubbing of the same method call has to happen in the same interaction.
+            1 * subscriber.receive("message1") >> "ok"
+            1 * subscriber.receive("message2") >> "fail"
+    }    
 
 
+    // Advanced match of parameter
+    
+    def "should throw exception if user's name is Michael otherwise no exception should be thrown"() {
+        given:
+            UserService service = Stub()
+            
+            // Advanced match of parameter
+            service.save({ User user -> 'Michael' == user.name }) >> {
+                throw new IllegalArgumentException("We don't want you here, Micheal!")
+            }
+     
+        when:
+            User user = new User(name: 'Michael')
+            service.save(user)
+        then:
+            thrown(IllegalArgumentException)
+        
+        when:
+            User user2 = new User(name: 'Lucas')
+            service.save(user2)
+        then:
+            notThrown(IllegalArgumentException)
+    }
+    
+    
+    
+    // Spies
+    
+    def "creating spy from class"() {
+        given:
+            Transaction transaction = Stub(Transaction)
+            UserService service = Spy(UserServiceImpl, constructorArgs: [transaction])
+        expect:
+            service.save(new User(name: 'Katherine'))
+    }
+    
+    
+    
+    // Exceptions
+    def 'exceptions'() {
+        def "should throw IllegalArgumentException with proper message"() {
+        when:
+            throw new IllegalArgumentException("Does description matter?")
+        then:
+            def e = thrown(IllegalArgumentException)
+            e.message == "Does description matter?"
+    }
+
+
+    // Assignments at the level of classJava
+    // Reset every test
+    // Shared
+    
+    // *************************************
+    // Please note that Spock does not guarantee that tests specified in a class will be 
+    // executed in the order they appear in the file.
+    // *************************************
+    
+    private List<Integer> objectUnderTest = []
+    
+    @Shared
+    private List<Integer> objectUnderTestShared = []
+     
+    def "test 1"() {
+        when:
+            objectUnderTest.add(1)
+            objectUnderTestShared.add(1)
+        then:
+            objectUnderTest.size() == 1
+            objectUnderTestShared.size() == 1
+    }
+     
+    def "test 2"() {
+        when:
+            objectUnderTest.add(1)
+            objectUnderTestShared.add(1)
+        then:
+            objectUnderTest.size() == 1
+            objectUnderTestShared.size() == 2
+    }
+    
+    
+
+
+
+    // Mocks from Grails
+    // 
+    // The Mock annotation creates mock version of any collaborators. 
+    // There is an in-memory implementation of GORM that will simulate most interactions 
+    // with the GORM API. For those interactions that are not automatically mocked you can 
+    // use the built in support for defining mocks and stubs programmatically. 
+    //
+    // For example:
+
+    void testSearch() {
+          def control = mockFor(SearchService)
+          control.demand.searchWeb { String q -> ['mock results'] }
+          control.demand.static.logResults { List results ->  }
+          controller.searchService = control.createMock()
+          controller.search()
+          assert controller.response.text.contains "Found 1 results"
+    }
+    
+    
+    // from : http://grails.org/doc/2.4.3/guide/testing.html#unitTesting
+    
+    
+    import grails.test.mixin.TestFor
+import spock.lang.Specification
+@TestFor(BookController)
+@Mock(Book)
+class BookControllerSpec extends Specification {
+
+    void "test search"() {
+        given:
+        def searchMock = mockFor(SearchService)
+        searchMock.demand.searchWeb { String q -> ['first result', 'second result'] }
+        searchMock.demand.static.logResults { List results ->  }
+        controller.searchService = searchMock.createMock()
+
+        when:
+        controller.search()
+
+        then:
+        controller.response.text.contains "Found 2 results"
+    }
+}
 
 }
 
