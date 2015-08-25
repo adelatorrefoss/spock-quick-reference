@@ -293,12 +293,12 @@ class MockingHowtoSpec extends Specification {
           controller.search()
           assert controller.response.text.contains "Found 1 results"
     }
+}
+    
+// from : http://grails.org/doc/2.4.3/guide/testing.html#unitTesting
     
     
-    // from : http://grails.org/doc/2.4.3/guide/testing.html#unitTesting
-    
-    
-    import grails.test.mixin.TestFor
+import grails.test.mixin.TestFor
 import spock.lang.Specification
 @TestFor(BookController)
 @Mock(Book)
@@ -319,5 +319,17 @@ class BookControllerSpec extends Specification {
     }
 }
 
+
+@Unroll("maximum of #a and #b is #c")
+def "maximum of two numbers"() {
+   expect:
+   Math.max(a, b) == c
+
+   where:
+   a | b | c
+   3 | 7 | 7
+   5 | 4 | 5
+   9 | 9 | 9
 }
+
 
